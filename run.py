@@ -6,6 +6,7 @@ import ai_hub
 import colab
 import utils.wandb
 import os
+from model.vitfs import *
 
 parser = argparse.ArgumentParser(description='Run the benchmark script for in colab gpu and cpu')
 
@@ -21,7 +22,9 @@ parser.add_argument("--models", nargs="+", default=[
     "vit_tiny_patch16_224",
     "mobilevitv2_100",
     "mobilevitv2_125",
-    "tiny_vit_5m_224"
+    "tiny_vit_5m_224",
+    "vitfs_tiny_patch16_gap_reg4_dinov2_bn_init",
+    "vitfs_tiny_patch16_gap_reg4_dinov2_init"
     ],
     help="List of model names"
 )
@@ -36,7 +39,7 @@ def main():
         for image_size in args.image_sizes:
 
             print(f"Running benchmark for Model: {model_name} and Image Size: {image_size}")
-            model = utils.get_model(model_name)
+            model = utils.get_model(model_name, image_size)
 
             if args.device == 'all':
                 ai_hub_results = process_ai_hub(model, model_name, image_size)
@@ -65,10 +68,15 @@ def main():
 
             else:
                 raise ValueError(f"Invalid device option: {args.device}")
-
+            
     df = pd.DataFrame(all_results)
+
+    # Reorder columns: model_name, image_size, device, then the rest
+    preferred_order = [col for col in ['model_name', 'image_size', 'device'] if col in df.columns]
+    other_cols = [col for col in df.columns if col not in preferred_order]
+    df = df[preferred_order + other_cols]
     print(df)
-    # Ensure results directory exists
+    # Ensure results directory exists if needed
     # os.makedirs("results", exist_ok=True)
     df.to_csv("benchmark_results.csv", index=False)
 
