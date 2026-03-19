@@ -11,6 +11,7 @@ import numpy as np
 
 def run(model, device, image_size, runs=10, warmup_runs=10):
     
+    model = model.to(device)
     input_tensor = torch.randn(1, 3, image_size, image_size).to(device)
     metrics = benchmark_model(model, input_tensor=input_tensor, runs=runs, warmup_runs=warmup_runs)
     
